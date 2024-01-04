@@ -1,0 +1,14 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+nav {
+    box-shadow: 0 0 10px #000;
+}
+nav a {
+    transition: 0.4s ;
+}
+nav a:hover {
+    text-decoration: underline !important;
+}
