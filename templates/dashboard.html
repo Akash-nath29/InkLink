@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block body %}
+{% for user in users %}
+<img src="{{user.profile_picture}}" alt="" width="500px">
+{% endfor %}
+{% endblock %}
