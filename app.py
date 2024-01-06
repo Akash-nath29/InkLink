@@ -8,6 +8,8 @@ import secrets
 from authlib.integrations.flask_client import OAuth
 from os import environ as env
 from urllib.parse import quote_plus, urlencode
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -51,6 +53,9 @@ class Post(db.Model):
     posted_at = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+admin = Admin(app)
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Post, db.session))
 
 @app.route('/')
 def index():
@@ -159,6 +164,35 @@ def dashboard():
 #         flash('You are not currently logged in.', 'warning')
 
 #     return redirect(url_for('home'))
+
+@app.route('/add_blog', methods=['GET', 'POST'])
+def add_blog():
+    if request.method == 'POST':
+        post_title = request.form.get('post_title')
+        post_content = request.form.get('post_content')
+        post_banner = request.form.get('post_banner', 'static/img/defaultBanner.png')  # Default if not provided
+        user_id = user_id = session['user']['sub']  # Replace with the actual user ID (you may need to implement user authentication)
+
+        if not post_title or not post_content:
+            flash('Title and content are required.', 'danger')
+        else:
+            post = Post(
+                post_title=post_title,
+                post_content=post_content,
+                post_banner=post_banner,
+                likes=0,
+                dislikes=0,
+                posted_at=datetime.utcnow(),  # Adjust timezone as needed
+                user_id=user_id
+            )
+
+            db.session.add(post)
+            db.session.commit()
+
+            flash('Blog post added successfully!', 'success')
+            return redirect(url_for('dashboard'))  # Adjust the route as needed
+
+    return render_template('add_blog.html', title='Add Blog')
 
 
 if __name__ == '__main__':

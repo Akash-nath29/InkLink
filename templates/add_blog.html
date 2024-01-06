@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container my-4">
+    <h2>Add Blog</h2>
+    <form method="POST" action="{{ url_for('add_blog') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="post_banner" class="form-control-label">Banner Image</label>
+            <input type="file" id="post_banner" name="post_banner" class="form-control-file" accept="image/*"
+                onchange="previewImage(this)">
+            <img id="bannerPreview" class="img-fluid mt-2" style="display:none;" alt="Banner Preview">
+        </div>
+        <div class="form-group">
+            <label for="post_title" class="form-control-label">Title</label>
+            <input type="text" id="post_title" name="post_title" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="post_content" class="form-control-label">Content</label>
+            <textarea id="post_content" name="post_content" class="form-control" cols="30" rows="20"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<script>
+    function previewImage(input) {
+        var preview = document.getElementById('bannerPreview');
+        var file = input.files[0];
+        var reader = new FileReader();
+
+        reader.onloadend = function () {
+            preview.src = reader.result;
+            preview.style.display = 'block';
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

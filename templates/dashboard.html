@@ -1,7 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 {% block body %}
-{% for user in users %}
-<img src="{{user.profile_picture}}" alt="" width="500px">
+<center>
+    <h1>Dashboard</h1>
+</center>
+{% for post in posts %}
+<div class="card-container">
+    <div class="card col-xxl">
+        <div class="image"></div>
+        <div class="content">
+            <a href="#">
+                <span class="title">
+                    {{post.post_title}}
+                </span>
+            </a>
+
+            <p class="desc">
+                {{ post.post_content[:100] }}{% if post.post_content|length > 100 %}...{% endif %}
+            </p>
+
+            <a class="action" href="#">
+                Find out more
+                <span aria-hidden="true">
+                    →
+                </span>
+            </a>
+        </div>
+    </div>
+</div>
 {% endfor %}
 {% endblock %}
