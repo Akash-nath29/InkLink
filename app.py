@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
+from flask import current_app as app
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from datetime import datetime
@@ -7,9 +9,11 @@ from dotenv import find_dotenv, load_dotenv
 import secrets
 from authlib.integrations.flask_client import OAuth
 from os import environ as env
+import os
 from urllib.parse import quote_plus, urlencode
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+import uuid
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -19,6 +23,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.secret_key = secrets.token_hex(64)
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 oauth = OAuth(app)
 
@@ -82,12 +87,15 @@ def login():
         redirect_uri=url_for("callback", _external=True)
     )
 
+# global user_id
 @app.route('/callback')
 def callback():
     try:
         token = oauth.auth0.authorize_access_token()
         userinfo = oauth.auth0.parse_id_token(token, nonce=session.get('nonce'))
         session["user"] = userinfo
+        print(userinfo)
+        print(session["user"])
         # print(userinfo)
 
         # Check if the user already exists in the local database
@@ -101,6 +109,7 @@ def callback():
 
         # Store the user information in the session
         session['user'] = userinfo
+        user_id = userinfo['sub']
 
         return redirect(url_for('dashboard'))
     except Exception as e:
@@ -165,25 +174,41 @@ def dashboard():
 
 #     return redirect(url_for('home'))
 
+
+def upload_file(file_or_path):
+    if isinstance(file_or_path, str):  # If it's a string, treat it as a file path
+        return file_or_path
+
+    if file_or_path and hasattr(file_or_path, 'filename'):  # Check if it has a 'filename' attribute
+        unique_filename = str(uuid.uuid4()) + '_' + secure_filename(file_or_path.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file_or_path.save(file_path)
+        return file_path
+    return None
+
+
 @app.route('/add_blog', methods=['GET', 'POST'])
 def add_blog():
+    global user_id
     if request.method == 'POST':
         post_title = request.form.get('post_title')
         post_content = request.form.get('post_content')
         post_banner = request.form.get('post_banner', 'static/img/defaultBanner.png')  # Default if not provided
-        user_id = user_id = session['user']['sub']  # Replace with the actual user ID (you may need to implement user authentication)
-
+        # user_id = user_id  # Replace with the actual user ID (you may need to implement user authentication)
+        user_id = session["user"]["sub"]
+        
         if not post_title or not post_content:
             flash('Title and content are required.', 'danger')
         else:
+            banner_path = upload_file(post_banner)
             post = Post(
                 post_title=post_title,
                 post_content=post_content,
-                post_banner=post_banner,
+                post_banner=banner_path,
                 likes=0,
                 dislikes=0,
                 posted_at=datetime.utcnow(),  # Adjust timezone as needed
-                user_id=user_id
+                user_id= user_id
             )
 
             db.session.add(post)

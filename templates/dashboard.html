@@ -4,10 +4,12 @@
 <center>
     <h1>Dashboard</h1>
 </center>
-{% for post in posts %}
 <div class="card-container">
+    {% for post in posts %}
     <div class="card col-xxl">
-        <div class="image"></div>
+        <div class="image">
+            <img src="{{post.post_banner}}" alt="">
+        </div>
         <div class="content">
             <a href="#">
                 <span class="title">
@@ -27,6 +29,6 @@
             </a>
         </div>
     </div>
+    {% endfor %}
 </div>
-{% endfor %}
 {% endblock %}

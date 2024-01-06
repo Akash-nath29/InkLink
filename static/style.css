@@ -26,9 +26,11 @@ nav a:hover {
 } */
 
 .card-container {
+    width: 100%;
     /* min-height: 100vh; */
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 
 .card {
