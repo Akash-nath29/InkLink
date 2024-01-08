@@ -38,7 +38,8 @@ oauth.register(
     server_metadata_url=f'https://{env.get("AUTH0_DOMAIN")}/.well-known/openid-configuration',
 )
 
-#TODO: Write the database model
+# TODO: Write the database model
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,6 +48,7 @@ class User(db.Model):
     bio = db.Column(db.Text(1000), nullable=True)
     profile_picture = db.Column(db.String, default='static/img/default.png')
     posts = db.relationship('Post', backref='author', lazy=True)
+
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,9 +60,11 @@ class Post(db.Model):
     posted_at = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+
 admin = Admin(app)
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(Post, db.session))
+
 
 @app.route('/')
 def index():
@@ -81,6 +85,7 @@ def index():
 
 #     return render_template('/auth/login.html')
 
+
 @app.route('/login')
 def login():
     return oauth.auth0.authorize_redirect(
@@ -88,22 +93,26 @@ def login():
     )
 
 # global user_id
+
+
 @app.route('/callback')
 def callback():
     try:
         token = oauth.auth0.authorize_access_token()
-        userinfo = oauth.auth0.parse_id_token(token, nonce=session.get('nonce'))
+        userinfo = oauth.auth0.parse_id_token(
+            token, nonce=session.get('nonce'))
         session["user"] = userinfo
         print(userinfo)
         print(session["user"])
-        # print(userinfo)
+        print(userinfo)
 
         # Check if the user already exists in the local database
         user = User.query.filter_by(email=userinfo['email']).first()
 
         if not user:
             # If the user doesn't exist, create a new user in the local database
-            user = User(username=userinfo['nickname'], email=userinfo['email'], profile_picture=userinfo['picture'])
+            user = User(
+                username=userinfo['nickname'], email=userinfo['email'], profile_picture=userinfo['picture'])
             db.session.add(user)
             db.session.commit()
 
@@ -115,6 +124,7 @@ def callback():
     except Exception as e:
         flash(f'Error during callback: {str(e)}', 'danger')
         return redirect('/')
+
 
 @app.route("/logout")
 def logout():
@@ -131,6 +141,7 @@ def logout():
             quote_via=quote_plus,
         )
     )
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -176,27 +187,32 @@ def dashboard():
 
 
 def upload_file(file_or_path):
-    if isinstance(file_or_path, str):  # If it's a string, treat it as a file path
+    if isinstance(file_or_path, str):
         return file_or_path
 
-    if file_or_path and hasattr(file_or_path, 'filename'):  # Check if it has a 'filename' attribute
-        unique_filename = str(uuid.uuid4()) + '_' + secure_filename(file_or_path.filename)
+    if file_or_path and hasattr(file_or_path, 'filename'):
+        unique_filename = str(uuid.uuid4()) + '_' + \
+            secure_filename(file_or_path.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file_or_path.save(file_path)
         return file_path
+
     return None
 
 
 @app.route('/add_blog', methods=['GET', 'POST'])
 def add_blog():
-    global user_id
+    if 'user' not in session:
+        flash('You need to log in first.', 'danger')
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         post_title = request.form.get('post_title')
         post_content = request.form.get('post_content')
-        post_banner = request.form.get('post_banner', 'static/img/defaultBanner.png')  # Default if not provided
-        # user_id = user_id  # Replace with the actual user ID (you may need to implement user authentication)
+        # Use request.files to get the file
+        post_banner = request.files.get('post_banner')
         user_id = session["user"]["sub"]
-        
+
         if not post_title or not post_content:
             flash('Title and content are required.', 'danger')
         else:
@@ -207,15 +223,15 @@ def add_blog():
                 post_banner=banner_path,
                 likes=0,
                 dislikes=0,
-                posted_at=datetime.utcnow(),  # Adjust timezone as needed
-                user_id= user_id
+                posted_at=datetime.utcnow(),
+                user_id=user_id
             )
 
             db.session.add(post)
             db.session.commit()
 
             flash('Blog post added successfully!', 'success')
-            return redirect(url_for('dashboard'))  # Adjust the route as needed
+            return redirect(url_for('dashboard'))
 
     return render_template('add_blog.html', title='Add Blog')
 

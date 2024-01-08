@@ -8,7 +8,7 @@
     {% for post in posts %}
     <div class="card col-xxl">
         <div class="image">
-            <img src="{{post.post_banner}}" alt="">
+            <img src="{{post.post_banner}}" alt="" width="100%">
         </div>
         <div class="content">
             <a href="#">
@@ -20,7 +20,9 @@
             <p class="desc">
                 {{ post.post_content[:100] }}{% if post.post_content|length > 100 %}...{% endif %}
             </p>
-
+            <!-- <p>
+                <img src="{{post.post_banner}}" alt="">
+            </p> -->
             <a class="action" href="#">
                 Find out more
                 <span aria-hidden="true">
