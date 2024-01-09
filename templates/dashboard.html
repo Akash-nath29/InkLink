@@ -11,7 +11,7 @@
             <img src="{{post.post_banner}}" alt="" width="100%">
         </div>
         <div class="content">
-            <a href="#">
+            <a href="{{url_for('view_blog', post_id=post.id)}}">
                 <span class="title">
                     {{post.post_title}}
                 </span>

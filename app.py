@@ -236,5 +236,11 @@ def add_blog():
     return render_template('add_blog.html', title='Add Blog')
 
 
+@app.route('/<int:post_id>/view')
+def view_blog(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('view_blog.html', post=post)
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=80)
